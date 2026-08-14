@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTextEdit>
 
 class MainWindow : public QMainWindow
 {
@@ -10,5 +11,10 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
+    QTextEdit *textEdit;
+private slots:
+    void newfile();
+    void openfile();
+    void savefile();
 };
 #endif // MAINWINDOW_H
