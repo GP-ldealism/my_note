@@ -12,6 +12,7 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
     QTextEdit *textEdit;
+    QString currentFile;
 private slots:
     void newfile();
     void openfile();

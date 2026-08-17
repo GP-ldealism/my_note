@@ -13,6 +13,7 @@
 #include <QDialog>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -71,9 +72,10 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     QStatusBar *statusBar = new QStatusBar();
-    QLabel *time = new QLabel("时间:2026-08-14");
+    QTimer *timer = new QTimer(this);
+    timer->start(1000);
+    QLabel *time = new QLabel();
     QLabel *encodeFormat = new QLabel("编码格式:UTF-8");
-    QHBoxLayout *statusHBox = new QHBoxLayout();
     statusBar->addWidget(time);
     statusBar->addPermanentWidget(encodeFormat);
 
@@ -90,6 +92,10 @@ MainWindow::MainWindow(QWidget *parent)
     // connect
     connect(create, &QAction::triggered, this, &MainWindow::newfile);
     connect(open, &QAction::triggered, this, &MainWindow::openfile);
+    connect(save, &QAction::triggered, this, &MainWindow::savefile);
+    connect(timer, &QTimer::timeout, this, [time]() {
+        time->setText("时间：" + QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+    });
 
 
     this->setCentralWidget(textEdit);
@@ -100,14 +106,24 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow() = default;
 void MainWindow::newfile() {
-
+    if (!textEdit->document()->isEmpty()) {
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "保存", "1");
+        if (reply == QMessageBox::Yes) {
+            savefile();
+        } else if (reply == QMessageBox::Cancel) {
+            return;
+        }
+    }
+    textEdit->clear();
+    this->setWindowTitle("新建文件");
 }
 void MainWindow::openfile() {
-    QString filename = QFileDialog::getOpenFileName(this, "打开文件", "", "*.*");
-    if (filename.isEmpty()) {
+    currentFile = QFileDialog::getOpenFileName(this, "打开文件", "", "*.*");
+    if (currentFile.isEmpty()) {
         return;
     }
-    QFile file(filename);
+    QFile file(currentFile);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QMessageBox::warning(this, "error", "无法打开文件");
         return;
@@ -115,8 +131,34 @@ void MainWindow::openfile() {
     QTextStream in(&file);
     textEdit->setText(in.readAll());
     file.close();
-    this->setWindowTitle("-" + QFileInfo(filename).fileName());
+    this->setWindowTitle("-" + QFileInfo(currentFile).fileName());
 }
 void MainWindow::savefile() {
-
+    if (!currentFile.isEmpty()) {
+        QFile file(currentFile);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QMessageBox::warning(this, "save fail", "保存失败");
+            return;
+        }
+        QTextStream out(&file);
+        QString res = textEdit->toPlainText();
+        out << res;
+        file.close();
+        this->setWindowTitle("-" + QFileInfo(currentFile).fileName());
+        QMessageBox::information(this, "save successed", "保存成功");
+        return;
+    }
+    QString filename = QFileDialog::getSaveFileName(this, "保存文件", "*.*");
+    if (filename.isEmpty())
+        return;
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, "save fail", "保存失败");
+        return;
+    }
+    QTextStream out(&file);
+    QString res = textEdit->toPlainText();
+    out << res;
+    file.close();
+    this->setWindowTitle("-" + QFileInfo(filename).fileName());
 }
