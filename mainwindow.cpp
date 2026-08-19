@@ -14,89 +14,18 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QTimer>
+#include <QApplication>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    QMenuBar *menuBar = new QMenuBar();
 
-    QMenu *file = new QMenu("文件");
-    QMenu *edit = new QMenu("编辑");
-    QMenu *about = new QMenu("关于");
-
-    menuBar->addMenu(file);
-    menuBar->addMenu(edit);
-    menuBar->addMenu(about);
-
-    QAction *create = new QAction("新建");
-    QAction *open = new QAction("打开");
-
-    QMenu *currentUse = new QMenu("最近使用");
-    QAction *curr1 = new QAction("最近123");
-    QAction *curr2 = new QAction("最近456");
-    currentUse->addAction(curr1);
-    currentUse->addAction(curr2);
-
-    QAction *save = new QAction("保存");
-    QAction *allSave = new QAction("全部保存");
-    QAction *exit = new QAction("退出");
-
-    file->addAction(create);
-    file->addAction(open);
-    file->addSeparator();
-    file->addMenu(currentUse);
-    file->addAction(save);
-    file->addAction(allSave);
-    file->addSeparator();
-    file->addAction(exit);
-
-    QAction *copy = new QAction("复制");
-    QAction *paste = new QAction("粘贴");
-    QAction *del = new QAction("删除");
-    QAction *find = new QAction("查找");
-
-    edit->addAction(copy);
-    edit->addAction(paste);
-    edit->addAction(del);
-    edit->addSeparator();
-    edit->addAction(find);
-
-
-    QToolBar *toolBar = new QToolBar(this);
-    toolBar->toolTip();
-    toolBar->setFloatable(true);
-    toolBar->setMovable(true);
-    toolBar->resize(80, 200);
-    // toolBar->setAcceptDrops(true);
-    toolBar->actionGeometry(new QAction("toolBar"));
-
-
-    QStatusBar *statusBar = new QStatusBar();
-    QTimer *timer = new QTimer(this);
-    timer->start(1000);
-    QLabel *time = new QLabel();
-    QLabel *encodeFormat = new QLabel("编码格式:UTF-8");
-    statusBar->addWidget(time);
-    statusBar->addPermanentWidget(encodeFormat);
-
-
-
-    // statusBar->addWidget(time, 600);
-    // statusBar->addWidget(encodeFormat, 700);
-    // statusBar->showMessage("I love China!");
-
+    this->startupMenuBar();
+    this->startupStatusBar();
+    this->startupConnect();
 
     textEdit = new QTextEdit();
     textEdit->setPlainText("");
-
-    // connect
-    connect(create, &QAction::triggered, this, &MainWindow::newfile);
-    connect(open, &QAction::triggered, this, &MainWindow::openfile);
-    connect(save, &QAction::triggered, this, &MainWindow::savefile);
-    connect(timer, &QTimer::timeout, this, [time]() {
-        time->setText("时间：" + QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
-    });
-
 
     this->setCentralWidget(textEdit);
     this->setMenuBar(menuBar);
@@ -161,4 +90,114 @@ void MainWindow::savefile() {
     out << res;
     file.close();
     this->setWindowTitle("-" + QFileInfo(filename).fileName());
+}
+void MainWindow::exitApp() {
+    //todo
+    QApplication::exit();
+}
+void MainWindow::about1() {
+    QDialog *dialog = new QDialog(this);
+    dialog->setModal(true);
+    dialog->setWindowTitle("about");
+    dialog->setFixedSize(300, 200);
+    QVBoxLayout *vlayout = new QVBoxLayout(dialog);
+    QLabel *titleLabel = new QLabel("<h2>my note<h2>");
+    titleLabel->setAlignment(Qt::AlignCenter);
+    vlayout->addWidget(titleLabel);
+    QLabel *versionLabel = new QLabel("Version: v2.3.6");
+    versionLabel->setAlignment(Qt::AlignCenter);
+    vlayout->addWidget(versionLabel);
+    dialog->exec();
+}
+void MainWindow::startupMenuBar() {
+    this->menuBar = new QMenuBar();
+
+    fileMenu = new QMenu("文件");
+    recentMenu = new QMenu("最近使用");
+    editMenu = new QMenu("编辑");
+    aboutMenu = new QMenu("关于");
+
+    menuBar->addMenu(fileMenu);
+    menuBar->addMenu(editMenu);
+    menuBar->addMenu(aboutMenu);
+
+    createAction = new QAction("新建");
+    openAction = new QAction("打开");
+
+    curr1Action = new QAction("最近123");
+    curr2Action = new QAction("最近456");
+    recentMenu->addAction(curr1Action);
+    recentMenu->addAction(curr2Action);
+
+    saveAction = new QAction("保存");
+    saveAllAction = new QAction("全部保存");
+    exitAction = new QAction("退出");
+
+    fileMenu->addAction(createAction);
+    fileMenu->addAction(openAction);
+    fileMenu->addSeparator();
+    fileMenu->addMenu(recentMenu);
+    fileMenu->addAction(saveAction);
+    fileMenu->addAction(saveAllAction);
+    fileMenu->addSeparator();
+    fileMenu->addAction(exitAction);
+
+    copyAction = new QAction("复制");
+    pasteAction = new QAction("粘贴");
+    deleteAction = new QAction("删除");
+    findAction = new QAction("查找");
+
+    editMenu->addAction(copyAction);
+    editMenu->addAction(pasteAction);
+    editMenu->addAction(deleteAction);
+    editMenu->addSeparator();
+    editMenu->addAction(findAction);
+
+    aboutAction = new QAction("关于");
+    aboutMenu->addAction(aboutAction);
+}
+void MainWindow::startupStatusBar() {
+    statusBar = new QStatusBar();
+    timer = new QTimer(this);
+    timer->start(1000);
+    timeLabel = new QLabel();
+    encodeFormat = new QLabel("编码格式:UTF-8");
+    statusBar->addWidget(timeLabel);
+    statusBar->addPermanentWidget(encodeFormat);
+}
+void MainWindow::startupConnect() {
+    // connect
+    connect(createAction, &QAction::triggered, this, &MainWindow::newfile);
+    connect(openAction, &QAction::triggered, this, &MainWindow::openfile);
+    connect(saveAction, &QAction::triggered, this, &MainWindow::savefile);
+    connect(timer, &QTimer::timeout, this, [this]() {
+        timeLabel->setText("时间：" + QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+    });
+    connect(exitAction, &QAction::triggered, this, &MainWindow::exitApp);
+    connect(aboutAction, &QAction::triggered, this, &MainWindow::about1);
+    connect(findAction, &QAction::triggered, this, &MainWindow::findText);
+}
+void MainWindow::findText() {
+    // 如果对话框已存在，直接显示并聚焦
+    // if (findDialog) {
+    //     findDialog->show();
+    //     findDialog->raise();
+    //     findLineEdit->setFocus();
+    //     findLineEdit->selectAll();
+    //     return;
+    // }
+
+    findDialog = new QDialog(this);
+    findDialog->setModal(true);
+    findDialog->setFixedSize(380, 200);
+    findDialog->setAttribute(Qt::WA_DeleteOnClose);  // 关闭时自动删除
+    QVBoxLayout *vlayout = new QVBoxLayout(findDialog);
+    findLineEdit = new QLineEdit();
+    findButton = new QPushButton("查找");
+
+
+    vlayout->addWidget(findLineEdit);
+    vlayout->addSpacing(20);
+    vlayout->addWidget(findButton);
+    findDialog->exec();
 }
